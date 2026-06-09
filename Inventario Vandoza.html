@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ventas">
+<title>Vandoza — Análisis de Ventas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0F1923;color:#E8E0D4;min-height:100vh;padding-bottom:80px;}
+input,select,textarea,button,label{font-family:inherit;}
+
+.hdr{background:linear-gradient(90deg,#C8A96E,#E8C98A 50%,#C8A96E);padding:52px 20px 14px;text-align:center;position:relative;overflow:hidden;}
+.hdr::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,0.03) 10px,rgba(0,0,0,0.03) 20px);}
+.hdr-in{position:relative;}
+.hdr p{font-size:10px;letter-spacing:4px;color:#5A3E1B;font-weight:700;margin-bottom:3px;}
+.hdr h1{font-size:26px;font-weight:900;color:#1A0F00;letter-spacing:3px;line-height:1;}
+.hdr small{font-size:10px;color:#6B4C22;letter-spacing:2px;}
+
+.nav{display:flex;background:#0A1018;border-bottom:2px solid #1A2B3C;position:sticky;top:0;z-index:100;}
+.nav button{flex:1;padding:11px 2px;border:none;background:transparent;color:#5A7A8A;font-size:10px;font-weight:800;cursor:pointer;border-bottom:3px solid transparent;-webkit-appearance:none;}
+.nav button.on{color:#C8A96E;border-bottom:3px solid #C8A96E;background:#0F1923;}
+
+.view{display:none;padding:14px;max-width:500px;margin:0 auto;}
+.view.on{display:block;}
+
+.card{background:#1A2B3C;border-radius:14px;margin-bottom:12px;overflow:hidden;border:1px solid #2A3D50;}
+.ch{padding:11px 15px;font-weight:800;font-size:12px;letter-spacing:.5px;border-bottom:1px solid #2A3D50;}
+.cb{padding:12px 15px;}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed #C8A96E55;border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;background:#C8A96E08;margin-bottom:12px;position:relative;}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone .uz-icon{font-size:36px;margin-bottom:8px;}
+.upload-zone .uz-title{font-weight:800;color:#C8A96E;font-size:14px;margin-bottom:4px;}
+.upload-zone .uz-sub{font-size:11px;color:#6B8299;}
+
+/* FECHA */
+.sw{position:relative;}
+.sw::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#C8A96E;pointer-events:none;font-size:12px;}
+select{width:100%;background:#0F1923;border:1px solid #2A3D50;border-radius:10px;padding:11px 12px;color:#E8E0D4;font-size:14px;outline:none;-webkit-appearance:none;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+label{display:block;font-size:10px;color:#6B8299;letter-spacing:1px;margin-bottom:5px;font-weight:700;}
+
+/* BOTONES */
+.btn-pri{display:block;width:100%;padding:14px;background:linear-gradient(90deg,#C8A96E,#E8C98A);color:#1A0F00;font-weight:900;font-size:14px;letter-spacing:1px;border:none;border-radius:12px;cursor:pointer;-webkit-appearance:none;margin-bottom:8px;}
+.btn-sec{display:block;width:100%;padding:12px;background:#C8A96E22;border:1px solid #C8A96E44;color:#C8A96E;font-weight:800;font-size:13px;border-radius:12px;cursor:pointer;-webkit-appearance:none;margin-bottom:8px;}
+.btn-pri:active,.btn-sec:active{opacity:.75;}
+
+/* STATS */
+.s3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px;}
+.s2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc{background:#1A2B3C;border-radius:10px;padding:10px 11px;}
+.sl{font-size:9px;color:#6B8299;letter-spacing:.5px;margin-bottom:2px;}
+.sv{font-size:12px;font-weight:900;}
+
+/* RANKING */
+.rank-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1A2B3C44;}
+.rank-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-size:13px;font-weight:700;color:#C8D8E0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-meta{font-size:10px;color:#6B8299;margin-top:1px;}
+.rank-vals{text-align:right;flex-shrink:0;}
+.rank-qty{font-size:14px;font-weight:900;color:#C8A96E;}
+.rank-rev{font-size:10px;color:#7EB8A4;margin-top:1px;}
+.bar-mini{background:#0F1923;border-radius:20px;height:4px;margin-top:4px;overflow:hidden;}
+.bar-mini-fill{height:100%;border-radius:20px;}
+
+/* TABLA REGISTROS */
+.reg-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1A2B3C44;cursor:pointer;}
+.reg-item:active{opacity:.7;}
+.reg-fecha{font-size:12px;color:#C8D8E0;font-weight:700;}
+.reg-sub{font-size:10px;color:#6B8299;margin-top:1px;}
+.reg-total{font-size:13px;font-weight:900;color:#7EB8A4;}
+.reg-del{font-size:16px;color:#E07A7A44;padding:4px 8px;}
+
+/* BADGE */
+.bdg{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;display:inline-block;}
+.bdg-green{background:#7EB8A422;color:#7EB8A4;}
+.bdg-gold{background:#C8A96E22;color:#C8A96E;}
+
+/* FILTRO PERIODO */
+.periodo-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.ptab{flex:1;padding:9px 4px;border-radius:10px;border:none;cursor:pointer;font-size:11px;font-weight:800;-webkit-appearance:none;background:#1A2B3C;color:#6B8299;border:1px solid #2A3D50;}
+.ptab.on{background:#C8A96E;color:#1A0F00;border-color:#C8A96E;}
+
+.empty{color:#6B8299;text-align:center;padding:40px;font-size:13px;}
+.sep{font-size:10px;color:#5A7A8A;letter-spacing:2px;font-weight:700;margin:14px 0 8px;}
+footer{text-align:center;padding:18px;color:#2A3D50;font-size:10px;letter-spacing:2px;}
+</style>
+</head>
+<body>
+
+<div class="hdr"><div class="hdr-in">
+  <p>ANÁLISIS DE VENTAS</p>
+  <h1>VANDOZA</h1>
+  <small>RANKING · TENDENCIAS · PRODUCTOS</small>
+</div></div>
+
+<div class="nav">
+  <button class="on" onclick="tab('subir',this)">📤 SUBIR</button>
+  <button onclick="tab('ranking',this)">🏆 RANKING</button>
+  <button onclick="tab('resumen',this)">📊 RESUMEN</button>
+  <button onclick="tab('registros',this)">📁 ARCHIVOS</button>
+</div>
+
+<!-- ═══ TAB SUBIR ═══ -->
+<div id="v-subir" class="view on">
+
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept=".xls,.xlsx,.csv,.tsv,.txt" onchange="procesarArchivo(this)">
+    <div class="uz-icon">📂</div>
+    <div class="uz-title">Subir archivo de ventas</div>
+    <div class="uz-sub">Formatos: .xls · .xlsx · .csv · .txt</div>
+  </div>
+
+  <div class="card"><div class="cb">
+    <div class="fgrid">
+      <div><label>DÍA</label><div class="sw">
+        <select id="s-dia">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+          <option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
+          <option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
+          <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+          <option>26</option><option>27</option><option>28</option><option>29</option><option>30</option>
+          <option>31</option>
+        </select>
+      </div></div>
+      <div><label>MES</label><div class="sw">
+        <select id="s-mes">
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+      </div></div>
+      <div><label>AÑO</label><div class="sw">
+        <select id="s-anio">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div></div>
+    </div>
+  </div></div>
+
+  <div id="preview-box" style="display:none">
+    <div class="card">
+      <div class="ch" style="color:#7EB8A4">✅ Archivo leído</div>
+      <div class="cb" id="preview-content"></div>
+    </div>
+    <button class="btn-pri" onclick="guardarRegistro()">💾 GUARDAR ESTE DÍA</button>
+  </div>
+
+  <div id="tip-box" class="card">
+    <div class="ch" style="color:#C8A96E">💡 ¿Cómo funciona?</div>
+    <div class="cb">
+      <div style="font-size:12px;color:#A8BCC8;line-height:1.7">
+        1. Selecciona el día que corresponde al archivo<br>
+        2. Toca el área de arriba para subir tu archivo<br>
+        3. El sistema lee automáticamente los artículos<br>
+        4. Toca <b style="color:#C8A96E">Guardar</b> para acumular el historial<br><br>
+        <b style="color:#7EB8A4">Formato soportado:</b> Tu archivo debe tener columnas de Descripción, Cantidad y Precio
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB RANKING ═══ -->
+<div id="v-ranking" class="view">
+
+  <div class="periodo-tabs">
+    <button class="ptab on" onclick="setPeriodo('dia',this)">HOY</button>
+    <button class="ptab" onclick="setPeriodo('semana',this)">SEMANA</button>
+    <button class="ptab" onclick="setPeriodo('mes',this)">MES</button>
+    <button class="ptab" onclick="setPeriodo('todo',this)">TODO</button>
+  </div>
+
+  <div class="card"><div class="cb">
+    <div class="fgrid">
+      <div><label>DÍA REF.</label><div class="sw">
+        <select id="r-dia" onchange="renderRanking()">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+          <option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
+          <option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
+          <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+          <option>26</option><option>27</option><option>28</option><option>29</option><option>30</option>
+          <option>31</option>
+        </select>
+      </div></div>
+      <div><label>MES</label><div class="sw">
+        <select id="r-mes" onchange="renderRanking()">
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+      </div></div>
+      <div><label>AÑO</label><div class="sw">
+        <select id="r-anio" onchange="renderRanking()">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div></div>
+    </div>
+  </div></div>
+
+  <div id="ranking-cont"><div class="empty">Sube archivos para ver el ranking</div></div>
+</div>
+
+<!-- ═══ TAB RESUMEN ═══ -->
+<div id="v-resumen" class="view">
+  <div class="card"><div class="cb">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label>MES</label><div class="sw">
+        <select id="res-mes" onchange="renderResumen()">
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+      </div></div>
+      <div><label>AÑO</label><div class="sw">
+        <select id="res-anio" onchange="renderResumen()">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div></div>
+    </div>
+    <button class="btn-sec" onclick="renderResumen()">📊 VER RESUMEN</button>
+  </div></div>
+  <div id="resumen-cont"><div class="empty">Selecciona mes y año</div></div>
+</div>
+
+<!-- ═══ TAB REGISTROS ═══ -->
+<div id="v-registros" class="view">
+  <div id="registros-cont"><div class="empty">No hay archivos guardados aún</div></div>
+</div>
+
+<footer>VANDOZA © 2026 — ANÁLISIS DE VENTAS</footer>
+
+<script>
+var MES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+var HOY=new Date();
+var DB_KEY="vdz-ventas";
+var PERIODO="dia";
+var archivoActual=null;
+
+// Storage
+function cargarDB(){try{var r=localStorage.getItem(DB_KEY);return r?JSON.parse(r):{};}catch(e){return {};}}
+function guardarDB(db){try{localStorage.setItem(DB_KEY,JSON.stringify(db));}catch(e){alert("Error al guardar");}}
+var DB=cargarDB();
+
+function $(i){return document.getElementById(i);}
+function fmt(v){return (parseFloat(v)||0).toLocaleString("es-MX",{style:"currency",currency:"MXN",minimumFractionDigits:2});}
+function n(v){return parseFloat(v)||0;}
+function kfecha(a,m,d){return a+":"+m+":"+d;}
+
+// TABS
+function tab(id,btn){
+  ["subir","ranking","resumen","registros"].forEach(function(t){$("v-"+t).classList.remove("on");});
+  document.querySelectorAll(".nav button").forEach(function(b){b.classList.remove("on");});
+  $("v-"+id).classList.add("on");btn.classList.add("on");
+  if(id==="ranking")renderRanking();
+  if(id==="registros")renderRegistros();
+  if(id==="resumen")renderResumen();
+}
+
+function setPeriodo(p,btn){
+  PERIODO=p;
+  document.querySelectorAll(".ptab").forEach(function(b){b.classList.remove("on");});
+  btn.classList.add("on");
+  renderRanking();
+}
+
+// ── LEER ARCHIVO ────────────────────────────────────────────────────────────
+function procesarArchivo(input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var text=e.target.result;
+    var items=parsearTexto(text);
+    if(!items||!items.length){alert("No se pudo leer el archivo. Asegúrate que sea el formato correcto.");return;}
+    archivoActual=items;
+    mostrarPreview(items,file.name);
+  };
+  reader.readAsText(file,"UTF-8");
+}
+
+function parsearTexto(text){
+  // Detectar separador
+  var sep="\t";
+  if(text.indexOf("\t")===-1&&text.indexOf(",")>-1)sep=",";
+  var lineas=text.replace(/\r/g,"").split("\n").filter(function(l){return l.trim();});
+  if(!lineas.length)return [];
+  // Encabezados
+  var headers=lineas[0].split(sep).map(function(h){return h.trim().toLowerCase();});
+  // Detectar columnas
+  var iDesc=-1,iCant=-1,iPrecio=-1,iCodigo=-1;
+  headers.forEach(function(h,i){
+    if(h.indexOf("desc")>-1||h.indexOf("nombre")>-1||h.indexOf("articulo")>-1||h.indexOf("producto")>-1)iDesc=i;
+    if(h.indexOf("cant")>-1||h.indexOf("piezas")>-1||h.indexOf("qty")>-1)iCant=i;
+    if(h.indexOf("precio")>-1||h.indexOf("venta")>-1||h.indexOf("importe")>-1||h.indexOf("monto")>-1)iPrecio=i;
+    if(h.indexOf("cod")>-1||h.indexOf("sku")>-1||h.indexOf("clave")>-1)iCodigo=i;
+  });
+  // Si no encuentra desc, buscar columna con texto largo
+  if(iDesc===-1){
+    headers.forEach(function(h,i){if(i>0&&iDesc===-1)iDesc=i;});
+  }
+  if(iCant===-1)iCant=2;
+  if(iPrecio===-1)iPrecio=3;
+  var items=[];
+  for(var i=1;i<lineas.length;i++){
+    var cols=lineas[i].split(sep);
+    if(cols.length<2)continue;
+    var desc=(cols[iDesc]||"").trim().replace(/"/g,"");
+    var cant=n((cols[iCant]||"0").replace(/[^0-9.]/g,""));
+    var precio=n((cols[iPrecio]||"0").replace(/[^0-9.]/g,""));
+    var codigo=iCodigo>-1?(cols[iCodigo]||"").trim():"";
+    if(desc&&cant>0){
+      items.push({desc:desc,cant:cant,precio:precio,total:cant*precio,codigo:codigo});
+    }
+  }
+  return items;
+}
+
+function mostrarPreview(items,filename){
+  $("tip-box").style.display="none";
+  $("preview-box").style.display="block";
+  var totalUnidades=items.reduce(function(s,i){return s+i.cant;},0);
+  var totalVenta=items.reduce(function(s,i){return s+i.total;},0);
+  var h="";
+  h+='<div class="s2" style="margin-bottom:10px">';
+  h+='<div class="sc" style="border:1px solid #7EB8A433"><div class="sl">📦 ARTÍCULOS</div><div class="sv" style="color:#7EB8A4">'+items.length+' tipos</div></div>';
+  h+='<div class="sc" style="border:1px solid #C8A96E33"><div class="sl">🛍️ UNIDADES</div><div class="sv" style="color:#C8A96E">'+totalUnidades+'</div></div>';
+  h+='</div>';
+  h+='<div style="font-size:10px;color:#6B8299;margin-bottom:8px">ARTÍCULOS EN ESTE ARCHIVO</div>';
+  items.slice(0,8).forEach(function(it){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1A2B3C44">';
+    h+='<div><div style="font-size:12px;color:#C8D8E0;font-weight:600">'+it.desc+'</div>';
+    h+='<div style="font-size:10px;color:#6B8299">×'+it.cant+' · '+fmt(it.precio)+' c/u</div></div>';
+    h+='<div style="font-size:12px;font-weight:800;color:#7EB8A4">'+fmt(it.total)+'</div></div>';
+  });
+  if(items.length>8)h+='<div style="font-size:11px;color:#5A7A8A;text-align:center;padding:8px">...y '+(items.length-8)+' artículos más</div>';
+  $("preview-content").innerHTML=h;
+}
+
+function guardarRegistro(){
+  if(!archivoActual||!archivoActual.length){alert("Primero sube un archivo.");return;}
+  var dia=+$("s-dia").value,mes=+$("s-mes").value,anio=+$("s-anio").value;
+  var k=kfecha(anio,mes,dia);
+  // Merge si ya existe ese día
+  if(DB[k]){
+    if(!confirm("Ya existe un registro para este día. ¿Reemplazar?"))return;
+  }
+  DB[k]=archivoActual;
+  guardarDB(DB);
+  archivoActual=null;
+  $("preview-box").style.display="none";
+  $("tip-box").style.display="block";
+  $("file-input").value="";
+  // Flash
+  var uz=$("upload-zone");
+  uz.style.borderColor="#7EB8A4";uz.style.background="#7EB8A422";
+  setTimeout(function(){uz.style.borderColor="#C8A96E55";uz.style.background="#C8A96E08";},2000);
+  alert("✓ Guardado: "+dia+" de "+MES[mes]+" "+anio);
+}
+
+// ── OBTENER DATOS POR PERIODO ────────────────────────────────────────────────
+function getDiasFecha(anio,mes,dia){
+  // Devuelve array de {fecha,items} según el periodo actual
+  var dias=[];
+  var keys=Object.keys(DB);
+  keys.forEach(function(k){
+    var p=k.split(":");
+    var fa=+p[0],fm=+p[1],fd=+p[2];
+    var ok=false;
+    if(PERIODO==="dia"){ok=(fa===anio&&fm===mes&&fd===dia);}
+    else if(PERIODO==="semana"){
+      var ref=new Date(anio,mes,dia);
+      var f=new Date(fa,fm,fd);
+      var diff=(ref-f)/(1000*60*60*24);
+      ok=(diff>=0&&diff<7);
+    }
+    else if(PERIODO==="mes"){ok=(fa===anio&&fm===mes);}
+    else{ok=true;}
+    if(ok)dias.push({k:k,a:fa,m:fm,d:fd,items:DB[k]});
+  });
+  return dias;
+}
+
+function consolidarItems(dias){
+  var mapa={};
+  dias.forEach(function(dia){
+    dia.items.forEach(function(it){
+      var key=it.desc.trim().toUpperCase();
+      if(!mapa[key]){mapa[key]={desc:it.desc,cant:0,total:0,dias:0};}
+      mapa[key].cant+=it.cant;
+      mapa[key].total+=it.total;
+      mapa[key].dias++;
+    });
+  });
+  return Object.values(mapa).sort(function(a,b){return b.cant-a.cant;});
+}
+
+// ── RANKING ────────────────────────────────────────────────────────────────
+function renderRanking(){
+  var dia=+$("r-dia").value,mes=+$("r-mes").value,anio=+$("r-anio").value;
+  var dias=getDiasFecha(anio,mes,dia);
+  var cont=$("ranking-cont");
+  if(!dias.length){
+    var labels={dia:"hoy",semana:"esta semana",mes:"este mes",todo:"en el historial"};
+    cont.innerHTML='<div class="empty">Sin datos '+labels[PERIODO]+'<br><br><span style="font-size:11px">Sube archivos en la pestaña 📤 SUBIR</span></div>';
+    return;
+  }
+  var items=consolidarItems(dias);
+  var maxCant=items[0]?items[0].cant:1;
+  var totalUnidades=items.reduce(function(s,i){return s+i.cant;},0);
+  var totalVenta=items.reduce(function(s,i){return s+i.total;},0);
+  var colores=["#FFD700","#C0C0C0","#CD7F32","#7EB8A4","#9B8EC4","#7EB8A4"];
+
+  var periodoLabel={dia:"Día: "+dia+" "+MES[mes]+" "+anio,semana:"Semana al "+dia+" "+MES[mes],mes:"Mes: "+MES[mes]+" "+anio,todo:"Todo el historial"};
+
+  var h="";
+  h+='<div style="text-align:center;font-size:12px;color:#C8A96E;font-weight:800;margin-bottom:12px">'+periodoLabel[PERIODO]+' · '+dias.length+' día(s)</div>';
+
+  // KPIs
+  h+='<div class="s3">';
+  h+='<div class="sc" style="border:1px solid #C8A96E33"><div class="sl">🛍️ UNIDADES</div><div class="sv" style="color:#C8A96E">'+totalUnidades+'</div></div>';
+  h+='<div class="sc" style="border:1px solid #7EB8A433"><div class="sl">💰 INGRESOS</div><div class="sv" style="color:#7EB8A4">'+fmt(totalVenta)+'</div></div>';
+  h+='<div class="sc" style="border:1px solid #9B8EC433"><div class="sl">📦 ARTÍCULOS</div><div class="sv" style="color:#9B8EC4">'+items.length+'</div></div>';
+  h+='</div>';
+
+  // TOP 3 destacado
+  h+='<div class="card"><div class="ch" style="color:#FFD700">🏆 TOP ARTÍCULOS MÁS VENDIDOS</div><div class="cb">';
+  items.forEach(function(it,i){
+    var pct=(it.cant/maxCant)*100;
+    var color=i<3?colores[i]:"#3A5468";
+    var bg=i===0?"#FFD70015":i===1?"#C0C0C015":i===2?"#CD7F3215":"transparent";
+    h+='<div class="rank-item" style="background:'+bg+';border-radius:10px;padding:10px;margin-bottom:4px;border-bottom:none">';
+    h+='<div class="rank-num" style="background:'+color+'22;color:'+color+'">'+( i<3?["🥇","🥈","🥉"][i]:(i+1))+'</div>';
+    h+='<div class="rank-info">';
+    h+='<div class="rank-name">'+it.desc+'</div>';
+    h+='<div class="bar-mini"><div class="bar-mini-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+    h+='</div>';
+    h+='<div class="rank-vals">';
+    h+='<div class="rank-qty" style="color:'+color+'">×'+it.cant+'</div>';
+    h+='<div class="rank-rev">'+fmt(it.total)+'</div>';
+    h+='</div></div>';
+  });
+  h+='</div></div>';
+
+  // Tabla completa
+  if(items.length>3){
+    h+='<div class="card"><div class="ch" style="color:#C8A96E">TODOS LOS ARTÍCULOS</div><div class="cb">';
+    h+='<div style="display:flex;justify-content:space-between;padding:3px 0 7px;border-bottom:1px solid #2A3D50">';
+    h+='<span style="font-size:9px;color:#5A7A8A;font-weight:700;flex:1">ARTÍCULO</span>';
+    h+='<span style="font-size:9px;color:#5A7A8A;font-weight:700;width:50px;text-align:center">CANT</span>';
+    h+='<span style="font-size:9px;color:#5A7A8A;font-weight:700;width:70px;text-align:right">TOTAL</span></div>';
+    items.forEach(function(it,i){
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1A2B3C44">';
+      h+='<div style="flex:1;min-width:0"><div style="font-size:12px;color:#C8D8E0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+it.desc+'</div></div>';
+      h+='<div style="width:50px;text-align:center;font-size:13px;font-weight:800;color:#C8A96E">'+it.cant+'</div>';
+      h+='<div style="width:70px;text-align:right;font-size:11px;font-weight:700;color:#7EB8A4">'+fmt(it.total)+'</div></div>';
+    });
+    h+='</div></div>';
+  }
+
+  cont.innerHTML=h;
+}
+
+// ── RESUMEN MENSUAL ────────────────────────────────────────────────────────
+function renderResumen(){
+  var mes=+$("res-mes").value,anio=+$("res-anio").value;
+  // Obtener todos los días del mes
+  var diasMes=[];
+  Object.keys(DB).forEach(function(k){
+    var p=k.split(":");
+    if(+p[0]===anio&&+p[1]===mes)diasMes.push({d:+p[2],items:DB[k]});
+  });
+  diasMes.sort(function(a,b){return a.d-b.d;});
+  var cont=$("resumen-cont");
+  if(!diasMes.length){cont.innerHTML='<div class="empty">Sin datos en '+MES[mes]+' '+anio+'</div>';return;}
+
+  // Consolidar mes
+  var todos=[];diasMes.forEach(function(d){d.items.forEach(function(i){todos.push({d:d.d,it:i});});});
+  var mapa={};
+  todos.forEach(function(x){
+    var k=x.it.desc.trim().toUpperCase();
+    if(!mapa[k]){mapa[k]={desc:x.it.desc,cant:0,total:0,diasVenta:[]};}
+    mapa[k].cant+=x.it.cant;mapa[k].total+=x.it.total;
+    if(mapa[k].diasVenta.indexOf(x.d)===-1)mapa[k].diasVenta.push(x.d);
+  });
+  var ranking=Object.values(mapa).sort(function(a,b){return b.cant-a.cant;});
+  var maxCant=ranking[0]?ranking[0].cant:1;
+  var totalU=ranking.reduce(function(s,i){return s+i.cant;},0);
+  var totalV=ranking.reduce(function(s,i){return s+i.total;},0);
+
+  // Ventas por día
+  var ventasDia=diasMes.map(function(d){
+    return{d:d.d,total:d.items.reduce(function(s,i){return s+i.total;},0),cant:d.items.reduce(function(s,i){return s+i.cant;},0)};
+  });
+  var maxDia=Math.max.apply(null,ventasDia.map(function(d){return d.total;}));if(!maxDia)maxDia=1;
+  var mejorDia=ventasDia.reduce(function(mx,d){return d.total>mx.total?d:mx;},ventasDia[0]);
+
+  var h="";
+  h+='<div style="text-align:center;font-size:12px;color:#C8A96E;font-weight:800;margin-bottom:12px">'+MES[mes]+' '+anio+' · '+diasMes.length+' días</div>';
+
+  h+='<div class="s3">';
+  h+='<div class="sc" style="border:1px solid #7EB8A433"><div class="sl">💰 VENTAS</div><div class="sv" style="color:#7EB8A4">'+fmt(totalV)+'</div></div>';
+  h+='<div class="sc" style="border:1px solid #C8A96E33"><div class="sl">🛍️ UNIDADES</div><div class="sv" style="color:#C8A96E">'+totalU+'</div></div>';
+  h+='<div class="sc" style="border:1px solid #9B8EC433"><div class="sl">📦 ARTÍCULOS</div><div class="sv" style="color:#9B8EC4">'+ranking.length+'</div></div>';
+  h+='</div>';
+
+  // Ventas por día gráfica
+  h+='<div class="card"><div class="ch" style="color:#C8A96E">VENTAS POR DÍA</div><div class="cb">';
+  ventasDia.forEach(function(d){
+    var pct=(d.total/maxDia)*100;
+    var esMejor=d.d===mejorDia.d;
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    h+='<span style="font-size:10px;color:'+(esMejor?"#FFD700":"#6B8299")+';width:22px;flex-shrink:0;font-weight:'+(esMejor?"900":"400")+'">'+d.d+'</span>';
+    h+='<div style="flex:1;background:#0F1923;border-radius:20px;height:8px"><div style="width:'+pct+'%;height:100%;background:'+(esMejor?"linear-gradient(90deg,#FFD700,#FFA500)":"linear-gradient(90deg,#C8A96E,#E8C98A)")+';border-radius:20px"></div></div>';
+    h+='<span style="font-size:10px;color:'+(esMejor?"#FFD700":"#C8A96E")+';width:70px;text-align:right;flex-shrink:0">'+fmt(d.total)+'</span>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Top 10 artículos del mes
+  h+='<div class="card"><div class="ch" style="color:#FFD700">🏆 TOP DEL MES</div><div class="cb">';
+  ranking.slice(0,10).forEach(function(it,i){
+    var pct=(it.cant/maxCant)*100;
+    var color=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"#7EB8A4";
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1A2B3C44">';
+    h+='<div style="width:24px;height:24px;border-radius:50%;background:'+color+'22;color:'+color+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">'+(i<3?["🥇","🥈","🥉"][i]:(i+1))+'</div>';
+    h+='<div style="flex:1;min-width:0">';
+    h+='<div style="font-size:12px;color:#C8D8E0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+it.desc+'</div>';
+    h+='<div style="font-size:10px;color:#5A7A8A">Vendido '+it.diasVenta.length+' día(s) del mes</div>';
+    h+='<div style="background:#0F1923;border-radius:20px;height:4px;margin-top:4px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+color+';border-radius:20px"></div></div>';
+    h+='</div>';
+    h+='<div style="text-align:right;flex-shrink:0">';
+    h+='<div style="font-size:14px;font-weight:900;color:'+color+'">×'+it.cant+'</div>';
+    h+='<div style="font-size:10px;color:#7EB8A4">'+fmt(it.total)+'</div>';
+    h+='</div></div>';
+  });
+  h+='</div></div>';
+
+  // Indicadores
+  h+='<div class="card"><div class="ch" style="color:#9B8EC4">📌 INDICADORES DEL MES</div><div class="cb">';
+  h+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1E2F3E"><span style="font-size:12px;color:#A8BCC8">Venta promedio diaria</span><span style="font-size:12px;font-weight:700;color:#9B8EC4">'+fmt(totalV/diasMes.length)+'</span></div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1E2F3E"><span style="font-size:12px;color:#A8BCC8">Mejor día del mes</span><span style="font-size:12px;font-weight:700;color:#FFD700">Día '+mejorDia.d+' · '+fmt(mejorDia.total)+'</span></div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1E2F3E"><span style="font-size:12px;color:#A8BCC8">Artículo #1</span><span style="font-size:12px;font-weight:700;color:#7EB8A4">'+ranking[0].desc+' (×'+ranking[0].cant+')</span></div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:7px 0"><span style="font-size:12px;color:#A8BCC8">Unidades por día</span><span style="font-size:12px;font-weight:700;color:#C8A96E">'+Math.round(totalU/diasMes.length)+' unidades</span></div>';
+  h+='</div></div>';
+
+  cont.innerHTML=h;
+}
+
+// ── REGISTROS ────────────────────────────────────────────────────────────────
+function renderRegistros(){
+  var keys=Object.keys(DB).sort().reverse();
+  var cont=$("registros-cont");
+  if(!keys.length){cont.innerHTML='<div class="empty">Sin archivos guardados aún</div>';return;}
+  var h='<div style="font-size:12px;color:#C8A96E;font-weight:800;margin-bottom:12px">'+keys.length+' día(s) con registro</div>';
+  h+='<div class="card"><div class="cb">';
+  keys.forEach(function(k){
+    var p=k.split(":");
+    var items=DB[k];
+    var totalU=items.reduce(function(s,i){return s+i.cant;},0);
+    var totalV=items.reduce(function(s,i){return s+i.total;},0);
+    h+='<div class="reg-item">';
+    h+='<div onclick="verDia(\''+k+'\')">';
+    h+='<div class="reg-fecha">'+p[2]+' de '+MES[+p[1]]+' '+p[0]+'</div>';
+    h+='<div class="reg-sub">'+items.length+' artículos · '+totalU+' unidades</div>';
+    h+='</div>';
+    h+='<div style="display:flex;align-items:center;gap:8px">';
+    h+='<div class="reg-total">'+fmt(totalV)+'</div>';
+    h+='<button onclick="eliminarDia(\''+k+'\')" style="background:none;border:none;color:#E07A7A;font-size:18px;cursor:pointer;padding:4px">🗑️</button>';
+    h+='</div></div>';
+  });
+  h+='</div></div>';
+  cont.innerHTML=h;
+}
+
+function verDia(k){
+  var p=k.split(":");
+  $("r-anio").value=p[0];$("r-mes").value=p[1];$("r-dia").value=p[2];
+  PERIODO="dia";
+  document.querySelectorAll(".ptab").forEach(function(b){b.classList.remove("on");});
+  document.querySelectorAll(".ptab")[0].classList.add("on");
+  tab("ranking",document.querySelectorAll(".nav button")[1]);
+}
+
+function eliminarDia(k){
+  var p=k.split(":");
+  if(!confirm("¿Eliminar registro del "+p[2]+" de "+MES[+p[1]]+"?"))return;
+  delete DB[k];guardarDB(DB);renderRegistros();
+}
+
+// INIT
+$("s-mes").value=HOY.getMonth();
+$("s-dia").value=HOY.getDate();
+$("r-mes").value=HOY.getMonth();
+$("r-dia").value=HOY.getDate();
+$("res-mes").value=HOY.getMonth();
+</script>
+</body>
+</html>
